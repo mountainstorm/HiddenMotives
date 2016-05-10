@@ -1,0 +1,273 @@
+<!doctype html>
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <title>Hidden Motives</title>
+
+        <meta name="viewport" content="initial-scale=1 maximum-scale=1 user-scalable=0" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
+
+        <link rel="shortcut icon" href="favicon.png" />
+        <link rel="apple-touch-icon" href="favicon.png" />
+
+        <style>
+            * {
+                font-family: Lato, Sans Serif;
+                font-size: 20px;
+                font-weight: 100;
+            }
+
+            body {
+                margin: 0px;
+                padding: 0px;
+                background-color: #642E2E;
+                color: #fff;
+            }
+
+            canvas {
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- game imports -->
+        <script type="text/javascript" src="three.min.js"></script>
+        <script type="text/javascript" src="OrbitControls.js"></script>
+        <script>
+            function latLong(lat, long, radius) {
+                var phi   = (90-lat)*(Math.PI/180)
+                var theta = (long+180)*(Math.PI/180)
+
+                x = -((radius) * Math.sin(phi)*Math.cos(theta))
+                z = ((radius) * Math.sin(phi)*Math.sin(theta))
+                y = ((radius) * Math.cos(phi))
+                return new THREE.Vector3(x, y, z)
+            }
+
+
+            var Marker = function (lat, long) {
+                var geometry = new THREE.SphereGeometry(0.002)
+                //var geometry = new THREE.RingGeometry(0.0005, 0.001, 16)
+                var material = new THREE.MeshBasicMaterial()
+                material.color = new THREE.Color('#ffffff')
+                material.transparent = true
+                material.opacity = 0.6
+                var markerMesh1 = new THREE.Mesh(geometry, material)
+
+
+                //var geometry = new THREE.SphereGeometry(0.001, 32, 32)
+                var geometry = new THREE.CylinderGeometry(0.0005, 0.0005, 2)
+                var material = new THREE.MeshBasicMaterial()
+                material.color = new THREE.Color('#FF0000')
+                material.transparent = true
+                material.opacity = 0.2
+                var markerMesh = new THREE.Mesh(geometry, material)
+                // do lat long to location translation
+                var loc = latLong(lat-90, long, 0.5)
+                markerMesh.lookAt(loc)
+                var loc = latLong(lat, long, 1.5)
+                markerMesh.position.set(loc.x, loc.y, loc.z)
+
+
+                var loc = latLong(lat, long, 0.5-0.0005)
+                markerMesh1.lookAt(loc)
+                markerMesh1.position.set(loc.x, loc.y, loc.z)
+
+                if (firstMarker == null) {
+                    scene.add(markerMesh)
+                    firstMarker = markerMesh
+                    selected = markerMesh1
+                    markerMesh1.material.color.setHex(0xff0000)
+                }
+
+                markers.push(markerMesh1)
+
+                return markerMesh1
+            }
+
+
+            window.onload = function () {
+                markers = []
+                selected = null
+                firstMarker = null
+
+                scene = new THREE.Scene()
+                var camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.01, 1000)
+                camera.position.z = 0.75
+                var loc = latLong(47.3769, 8.5417, 0.75)
+                camera.position.set(loc.x, loc.y, loc.z)
+
+                var geometry = new THREE.SphereGeometry(0.5, 32, 32)
+                var material = new THREE.MeshPhongMaterial()
+                // Safari max image 16384x8192
+
+                material.map = THREE.ImageUtils.loadTexture('earth.map.jpg')
+                material.bumpMap = THREE.ImageUtils.loadTexture('earth.bump.png')
+                material.bumpScale = 0.2
+                material.shininess = 0
+                var earthMesh = new THREE.Mesh(geometry, material)
+                scene.add(earthMesh)
+
+
+                var controls = new THREE.OrbitControls(camera)
+                //controls.addEventListener('change', render)
+                controls.minDistance = 0.6
+                controls.maxDistance = 1.5
+
+                updateFcts = []
+                // updateFcts.push(function(delta, now) {
+                //     earthMesh.rotation.y  += 1 / 8 * delta
+                // })
+
+                var light = new THREE.AmbientLight(0x333333)
+                scene.add( light )
+
+                scene.add(Marker(51.5075, -0.1278)) // London
+                scene.add(Marker(53.4084, -2.9916)) // Liverpool
+                scene.add(Marker(54.9783, -1.6178)) // Newcastle
+                scene.add(Marker(52.4862, -1.8904)) // Birmingham
+                scene.add(Marker(52.2053, -0.1218)) // Cambridge
+
+                scene.add(Marker(55.8642, -4.2518)) // Glasgow
+                scene.add(Marker(57.1497, -2.0943)) // Aberdeen
+                scene.add(Marker(51.4816, -3.1791)) // Inverness
+                scene.add(Marker(57.4778, -4.2247)) // Cardiff
+
+                scene.add(Marker(54.5973, -5.9301)) // Belfast
+                scene.add(Marker(53.3498, -6.2603)) // Dublin
+                scene.add(Marker(51.8969, -8.4863)) // Cork
+
+                scene.add(Marker(48.8566, 2.3522)) // Paris
+                scene.add(Marker(48.1173, -1.6778)) // Rennes
+                scene.add(Marker(47.2184, -1.5536)) // Nantes
+                scene.add(Marker(44.8378, -0.5792)) // Bordeaux
+                scene.add(Marker(43.6047, 1.4442)) // Toulouse
+                scene.add(Marker(43.6108, 3.8767)) // Montpellier
+                scene.add(Marker(43.2965, 5.3698)) // Marseille
+                scene.add(Marker(43.7102, 7.2620)) // Nice
+                scene.add(Marker(45.7640, 4.8357)) // Lyon
+
+                scene.add(Marker(50.8503, 4.3517)) // Brussels
+                scene.add(Marker(51.2194, 4.4025)) // Antwerp
+                scene.add(Marker(51.2093, 3.2247)) // Bruges
+
+                scene.add(Marker(52.3702, 4.8952)) // Amsterdam
+                scene.add(Marker(51.9244, 4.4777)) // Rotterdam
+
+                scene.add(Marker(49.8153, 6.1296)) // Luxembourg
+
+                scene.add(Marker(55.6761, 12.5683)) // Copenhagen
+
+                scene.add(Marker(47.3769, 8.5417)) // Zurich
+                scene.add(Marker(46.9480, 7.4474)) // Bern
+                scene.add(Marker(46.2044, 6.1432)) // Geneva
+
+                scene.add(Marker(45.0703, 7.6869)) // Turin
+                scene.add(Marker(45.4654, 9.1859)) // Milan
+                scene.add(Marker(43.9424, 12.4578)) // San Marino
+                scene.add(Marker(41.9028, 12.4964)) // Rome
+                scene.add(Marker(40.8518, 14.2681)) // Naples
+                scene.add(Marker(45.4408, 12.3155)) // Venice
+
+
+                scene.add(Marker(48.1351, 11.5820)) // Munich
+                scene.add(Marker(48.7758, 9.1829)) // Stuttgart
+                scene.add(Marker(50.1109, 8.6821)) // Frankfurt
+                scene.add(Marker(49.4520, 11.0768)) // Nuremberg
+                scene.add(Marker(51.2277, 6.7735)) // Dusseldorf
+                scene.add(Marker(51.0504, 13.7373)) // Dresden
+                scene.add(Marker(52.5200, 13.4050)) // Berlin
+                scene.add(Marker(53.5511, 9.9937)) // Hamburg
+
+                scene.add(Marker(37.9922, -1.1307)) // Murcia
+                scene.add(Marker(41.3851, 2.1734)) // Barcelona
+                scene.add(Marker(40.4168, -3.7038)) // Madrid
+
+                scene.add(Marker(41.1579, -8.6291)) // Porto
+                scene.add(Marker(38.7223, -9.1393)) // Lisbon
+
+                
+                var renderer = new THREE.WebGLRenderer()
+                renderer.setSize(window.innerWidth, window.innerHeight)
+                document.body.appendChild( renderer.domElement )
+
+                updateFcts.push(function(delta, now, elapsed) {
+                    controls.update()
+                })
+
+                var light = new THREE.DirectionalLight(0xcccccc, 3)
+                light.position.set(5, 3, 5)
+                scene.add(light)
+
+
+                document.addEventListener( 'mousedown', onDocumentMouseDown )
+                document.addEventListener( 'mousemove', onDocumentMouseMove )
+
+                function onDocumentMouseDown( event ) {    
+                    event.preventDefault();
+                    var mouse3D = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1,   
+                                            -( event.clientY / window.innerHeight ) * 2 + 1,  
+                                            0.5 )
+                    var raycaster =  new THREE.Raycaster()
+                    raycaster.setFromCamera(mouse3D, camera)
+                    var intersects = raycaster.intersectObjects(markers)
+                    if ( intersects.length > 0 ) {
+                        if (intersects[ 0 ].object != selected) {
+                            if (selected != null) {
+                                selected.material.color.setHex(0xffffff)
+                            }
+                            intersects[ 0 ].object.material.color.setHex(0xff0000)
+                            selected = intersects[ 0 ].object
+                        }
+                    }
+                }
+
+                selectedOver = null
+                selectedOverColor = null
+
+                function onDocumentMouseMove( event ) {
+                    event.preventDefault()
+                    var mouse3D = new THREE.Vector3( ( event.clientX / window.innerWidth ) * 2 - 1,   
+                                            -( event.clientY / window.innerHeight ) * 2 + 1,  
+                                            0.5 )
+                    var raycaster =  new THREE.Raycaster()
+                    raycaster.setFromCamera(mouse3D, camera)
+                    var intersects = raycaster.intersectObjects(markers)
+                    if (selectedOver && selectedOver != selected) {
+                        selectedOver.material.color.setHex(selectedOverColor)
+                    }
+                    selectedOver = null
+                    if ( intersects.length > 0 ) {
+                        if (intersects[ 0 ].object != selected) {
+                            selectedOverColor = intersects[ 0 ].object.material.color.getHex()
+                            intersects[ 0 ].object.material.color.setHex(0xffff00)
+                            selectedOver = intersects[ 0 ].object
+                        }
+                    }
+                }
+
+
+                var lastTimeMsec = null
+                var elapsed = 0
+                requestAnimationFrame(function animate (nowMsec) {
+                    if (elapsed == 0) {
+                        elapsed = nowMsec
+                    }
+                    // keep looping
+                    requestAnimationFrame( animate )
+                    // measure time
+                    lastTimeMsec    = lastTimeMsec || nowMsec - 1000 / 60
+                    var deltaMsec   = Math.min(200, nowMsec - lastTimeMsec)
+                    lastTimeMsec    = nowMsec
+                    // call each update function
+                    updateFcts.forEach(function (updateFn) {
+                        updateFn(deltaMsec / 1000, nowMsec / 1000, (elapsed - nowMsec) / 1000)
+                    })
+                    renderer.render(scene, camera)
+                })
+            }
+        </script>
+    </body>
+</html>
